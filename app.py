@@ -106,3 +106,17 @@ def download(filename):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+# Required for Vercel
+application = app
+```
+
+---
+
+**Fix 3 - Update `requirements.txt`** to pin exact versions:
+```
+flask==3.0.0
+groq==0.4.2
+fpdf2==2.7.6
+flask-cors==4.0.0
+python-dotenv==1.0.0
