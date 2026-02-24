@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexNotice — AI Legal Notice Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<nav class="navbar">
+    <div class="logo">⚖️ LexNotice</div>
+    <div class="tagline">AI-Powered Legal Notices</div>
+</nav>
+
+<div class="hero">
+    <h1>Generate a Legal Notice<br><span>in Seconds</span></h1>
+    <p>Professional, lawyer-quality notices powered by AI. Free forever.</p>
+</div>
+
+<div class="container">
+    <form id="noticeForm">
+
+        <div class="card">
+            <div class="card-header">
+                <span class="step">01</span>
+                <h2>Type of Notice</h2>
+            </div>
+            <div class="form-group">
+                <label>What is this notice about?</label>
+                <select name="notice_type" required>
+                    <option value="">Select type...</option>
+                    <option value="Security Deposit Not Returned">Security Deposit Not Returned</option>
+                    <option value="Property Damage">Property Damage</option>
+                    <option value="Unpaid Salary or Dues">Unpaid Salary or Dues</option>
+                    <option value="Consumer Complaint">Consumer Complaint</option>
+                    <option value="Cheque Bounce">Cheque Bounce</option>
+                    <option value="Breach of Contract">Breach of Contract</option>
+                    <option value="Harassment at Workplace">Harassment at Workplace</option>
+                    <option value="Deficiency in Service">Deficiency in Service</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="step">02</span>
+                <h2>Your Details</h2>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Your Full Name</label>
+                    <input type="text" name="sender_name" placeholder="e.g. Rahul Sharma" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Incident</label>
+                    <input type="date" name="incident_date" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Your Full Address</label>
+                <textarea name="sender_address" placeholder="House No, Street, City, State, PIN" required></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="step">03</span>
+                <h2>Recipient Details</h2>
+            </div>
+            <div class="form-group">
+                <label>Recipient's Full Name</label>
+                <input type="text" name="recipient_name" placeholder="e.g. Landlord / Employer / Company name" required>
+            </div>
+            <div class="form-group">
+                <label>Recipient's Full Address</label>
+                <textarea name="recipient_address" placeholder="Their complete address" required></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="step">04</span>
+                <h2>Issue Details</h2>
+            </div>
+            <div class="form-group">
+                <label>Describe Your Issue</label>
+                <textarea name="issue_description" rows="5" placeholder="Explain what happened in your own words. Be as detailed as possible..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Amount Involved (if any)</label>
+                <input type="text" name="amount" placeholder="e.g. ₹25,000 or leave blank if not applicable">
+            </div>
+        </div>
+
+        <button type="submit" id="generateBtn">
+            <span id="btnText">⚡ Generate Legal Notice</span>
+            <span id="btnLoader" class="hidden">Generating...</span>
+        </button>
+
+    </form>
+
+    <div id="loader" class="loader hidden">
+        <div class="spinner"></div>
+        <p>Our AI is drafting your legal notice...</p>
+        <small>This usually takes 10-15 seconds</small>
+    </div>
+
+    <div id="result" class="result hidden">
+        <div class="result-header">
+            <h2>✅ Your Legal Notice is Ready</h2>
+            <div class="result-actions">
+                <button id="copyBtn" onclick="copyNotice()">📋 Copy Text</button>
+                <button id="downloadBtn" class="download-btn">📄 Download PDF</button>
+            </div>
+        </div>
+        <div id="noticeText" class="notice-text"></div>
+        <p class="disclaimer">⚠️ This notice is AI-generated for informational purposes. Consult a qualified advocate before sending.</p>
+    </div>
+
+</div>
+
+<footer>
+    <p>LexNotice © 2026 · Built with AI · Not a substitute for legal advice</p>
+</footer>
+
+<script>
+    let pdfUrl = '';
+
+    document.getElementById('noticeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            notice_type: form.notice_type.value,
+            sender_name: form.sender_name.value,
+            sender_address: form.sender_address.value,
+            recipient_name: form.recipient_name.value,
+            recipient_address: form.recipient_address.value,
+            issue_description: form.issue_description.value,
+            amount: form.amount.value || 'Not specified',
+            incident_date: form.incident_date.value
+        };
+
+        document.getElementById('loader').classList.remove('hidden');
+        document.getElementById('result').classList.add('hidden');
+        document.getElementById('generateBtn').disabled = true;
+        document.getElementById('btnText').classList.add('hidden');
+        document.getElementById('btnLoader').classList.remove('hidden');
+
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('noticeText').innerText = result.notice;
+                pdfUrl = result.pdf_url;
+                document.getElementById('result').classList.remove('hidden');
+                document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (err) {
+            alert('Something went wrong. Please try again.');
+        } finally {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('generateBtn').disabled = false;
+            document.getElementById('btnText').classList.remove('hidden');
+            document.getElementById('btnLoader').classList.add('hidden');
+        }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+        window.location.href = pdfUrl;
+    });
+
+    function copyNotice() {
+        const text = document.getElementById('noticeText').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            document.getElementById('copyBtn').innerText = '✅ Copied!';
+            setTimeout(() => {
+                document.getElementById('copyBtn').innerText = '📋 Copy Text';
+            }, 2000);
+        });
+    }
+</script>
+
+</body>
+</html>
