@@ -181,7 +181,7 @@
 </footer>
 
 <script>
-    let pdfUrl = '';
+let pdfB64 = '';
 
     document.getElementById('noticeForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -212,7 +212,7 @@
             const result = await response.json();
             if (result.success) {
                 document.getElementById('noticeText').innerText = result.notice;
-                pdfUrl = result.pdf_url;
+                pdfB64 = result.pdf_b64;
                 document.getElementById('result').classList.remove('hidden');
                 document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
             } else {
@@ -229,8 +229,11 @@
     });
 
     document.getElementById('downloadBtn').addEventListener('click', () => {
-        window.location.href = pdfUrl;
-    });
+    const link = document.createElement('a');
+    link.href = 'data:application/pdf;base64,' + pdfB64;
+    link.download = 'legal_notice.pdf';
+    link.click();
+});
 
     function copyNotice() {
         const text = document.getElementById('noticeText').innerText;

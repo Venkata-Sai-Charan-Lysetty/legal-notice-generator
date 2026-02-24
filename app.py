@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, jsonify, send_file, Response
+from flask import Flask, request, jsonify, send_file, Response
 from groq import Groq
 from fpdf import FPDF
 from dotenv import load_dotenv
 import os
-import uuid
+import io
 
 load_dotenv()
 
@@ -60,7 +60,7 @@ Note: This notice has been generated for informational purposes. Please consult 
     )
     return response.choices[0].message.content
 
-def create_pdf(notice_text, filename):
+def create_pdf_bytes(notice_text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=11)
@@ -77,9 +77,7 @@ def create_pdf(notice_text, filename):
             pdf.write(8, clean_line)
             pdf.ln(8)
 
-    filepath = f"static/{filename}.pdf"
-    pdf.output(filepath)
-    return filepath
+    return pdf.output()
 
 @app.route('/')
 def home():
@@ -92,19 +90,15 @@ def generate():
     try:
         data = request.json
         notice_text = generate_notice(data)
-        filename = str(uuid.uuid4())
-        pdf_path = create_pdf(notice_text, filename)
+        pdf_bytes = create_pdf_bytes(notice_text)
+        pdf_b64 = __import__('base64').b64encode(pdf_bytes).decode('utf-8')
         return jsonify({
             "success": True,
             "notice": notice_text,
-            "pdf_url": f"/download/{filename}"
+            "pdf_b64": pdf_b64
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
-
-@app.route('/download/<filename>')
-def download(filename):
-    return send_file(f"static/{filename}.pdf", as_attachment=True, download_name="legal_notice.pdf")
 
 if __name__ == '__main__':
     app.run(debug=True)
