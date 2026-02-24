@@ -3,3 +3,4 @@ groq
 fpdf2
 flask-cors
 python-dotenv
+gunicorn
