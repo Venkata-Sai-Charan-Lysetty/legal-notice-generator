@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from groq import Groq
 from fpdf import FPDF
+from flask import Response
 from dotenv import load_dotenv
 import os
 import uuid
@@ -83,7 +84,9 @@ def create_pdf(notice_text, filename):
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    with open('templates/index.html', 'r') as f:
+        content = f.read()
+    return Response(content, mimetype='text/html')
 
 @app.route('/generate', methods=['POST'])
 def generate():
