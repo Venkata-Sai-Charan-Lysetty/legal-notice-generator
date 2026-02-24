@@ -5,7 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LexNotice — AI Legal Notice Generator</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1a1a2e;
+            --accent: #c9a84c;
+            --accent-light: #f0d485;
+            --bg: #f8f6f1;
+            --white: #ffffff;
+            --text: #2c2c2c;
+            --muted: #777;
+            --border: #e4e0d8;
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .bg-pattern { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 20% 20%, rgba(201,168,76,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(26,26,46,0.06) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: var(--primary); position: relative; z-index: 1; }
+        .logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--accent); font-weight: 700; letter-spacing: 1px; }
+        .tagline { font-size: 0.8rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 2px; }
+        .hero { text-align: center; padding: 60px 20px 40px; position: relative; z-index: 1; }
+        .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.2rem); color: var(--primary); line-height: 1.2; margin-bottom: 16px; }
+        .hero h1 span { color: var(--accent); }
+        .hero p { font-size: 1.1rem; color: var(--muted); font-weight: 300; }
+        .container { max-width: 760px; margin: 0 auto; padding: 0 20px 60px; position: relative; z-index: 1; }
+        .card { background: var(--white); border-radius: 16px; padding: 28px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.2s ease; }
+        .card:hover { transform: translateY(-2px); }
+        .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .step { background: var(--primary); color: var(--accent); font-family: 'Playfair Display', serif; font-size: 0.85rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; }
+        .card-header h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: var(--primary); font-weight: 600; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; color: var(--text); background: #fdfcfa; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,168,76,0.12); background: var(--white); }
+        .form-group textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+        button[type="submit"] { width: 100%; padding: 16px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; letter-spacing: 0.5px; transition: background 0.2s, transform 0.1s; margin-top: 8px; }
+        button[type="submit"]:hover { background: #2d2d4e; transform: translateY(-1px); }
+        button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .loader { text-align: center; padding: 50px; background: var(--white); border-radius: 16px; margin-top: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader p { font-size: 1rem; color: var(--primary); font-weight: 500; margin-bottom: 6px; }
+        .loader small { color: var(--muted); font-size: 0.85rem; }
+        .result { background: var(--white); border-radius: 16px; padding: 28px; margin-top: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+        .result-header h2 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--primary); }
+        .result-actions { display: flex; gap: 10px; }
+        .result-actions button { padding: 10px 18px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; transition: opacity 0.2s; }
+        #copyBtn { background: var(--bg); color: var(--primary); border: 1.5px solid var(--border) !important; }
+        .download-btn { background: var(--primary) !important; color: var(--accent) !important; }
+        .result-actions button:hover { opacity: 0.85; }
+        .notice-text { white-space: pre-wrap; font-size: 0.95rem; line-height: 1.8; color: var(--text); background: #fdfcfa; border: 1px solid var(--border); border-radius: 10px; padding: 24px; font-family: 'DM Sans', sans-serif; }
+        .disclaimer { margin-top: 16px; font-size: 0.82rem; color: var(--muted); background: #fff8e6; border: 1px solid #f0d485; border-radius: 8px; padding: 10px 14px; }
+        footer { text-align: center; padding: 30px; color: var(--muted); font-size: 0.82rem; border-top: 1px solid var(--border); position: relative; z-index: 1; }
+        .hidden { display: none !important; }
+        @media (max-width: 600px) { .navbar { padding: 16px 20px; } .form-row { grid-template-columns: 1fr; } .result-header { flex-direction: column; align-items: flex-start; } }
+    </style>
 </head>
 <body>
 
@@ -23,7 +79,6 @@
 
 <div class="container">
     <form id="noticeForm">
-
         <div class="card">
             <div class="card-header">
                 <span class="step">01</span>
@@ -100,7 +155,6 @@
             <span id="btnText">⚡ Generate Legal Notice</span>
             <span id="btnLoader" class="hidden">Generating...</span>
         </button>
-
     </form>
 
     <div id="loader" class="loader hidden">
@@ -120,7 +174,6 @@
         <div id="noticeText" class="notice-text"></div>
         <p class="disclaimer">⚠️ This notice is AI-generated for informational purposes. Consult a qualified advocate before sending.</p>
     </div>
-
 </div>
 
 <footer>
